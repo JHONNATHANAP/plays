@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Picas y Fijas By JHONNATHANAP</title>
+    <!-- Bootstrap 5 (CSS y JS bundle) por CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        .secret-mask {
+            font-family: var(--mono);
+            letter-spacing: .2rem;
+        }
+
+        .table-fixed {
+            table-layout: fixed;
+            word-break: break-word;
+        }
+
+        .kbd {
+            padding: .2rem .4rem;
+            border: 1px solid #ced4da;
+            border-bottom-width: 2px;
+            border-radius: .25rem;
+            font-family: var(--mono);
+            background: #f8f9fa;
+        }
+
+        .action-bar .btn,
+        .action-bar .form-select,
+        .action-bar .form-check {
+            margin-right: .5rem;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+
+        .cursor-text {
+            cursor: text;
+        }
+
+        .play-board {
+
+            th,
+            td,
+            input {
+                background-color: transparent !important;
+            }
+
+            .owner-vs-person {
+                background-color: rgb(186, 245, 224);
+                padding: 1rem;
+                border-radius: .25rem;
+            }
+
+            .person-vs-owner {
+                background-color: rgb(229, 237, 255);
+                padding: 1rem;
+                border-radius: .25rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-3">
+        <div class="container">
+            <div class="navbar-brand d-flex align-items-center gap-2">
+                <span>Picas y fijas</span>
+                <span class="text-white-50">By</span>
+                <a class="link-light text-decoration-underline"
+                    href="https://www.linkedin.com/in/jhonnathan-albarracin-61091316b/" target="_blank" rel="noopener"
+                    aria-label="Perfil de Linkedin de JHONNATHANAP">
+                    Jhonnathan Albarracin
+                </a>
+            </div>
+
+            <div class="d-none d-md-flex text-white small">
+                <div class="me-3"><span class="kbd">Enter</span> Agregar</div>
+                <div class="me-3"><span class="kbd">Ctrl</span>/<span class="kbd">⌘</span> + <span
+                        class="kbd">Enter</span> Agregar</div>
+                <div><span class="kbd">Esc</span> Limpiar</div>
+            </div>
+        </div>
+    </nav>
+
+    <ul class="nav nav-tabs container mt-2" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tabbtn-maquina" data-bs-toggle="tab" data-bs-target="#tab-maquina"
+                type="button" role="tab" aria-controls="tab-maquina" aria-selected="true">
+                Vs Máquina
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tabbtn-persona" data-bs-toggle="tab" data-bs-target="#tab-persona"
+                type="button" role="tab" aria-controls="tab-persona" aria-selected="false">
+                Vs Persona
+            </button>
+        </li>
+    </ul>
+
+
+    <main class="container">
+        <div id="alerts" class="mb-3" aria-live="polite"></div>
+
+        <div class="tab-content">
+            <!-- =================== Vs MÁQUINA =================== -->
+            <section class="tab-pane fade show active" id="tab-maquina" role="tabpanel" aria-labelledby="tab-maquina">
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <div class="d-flex flex-column flex-lg-row align-items-lg-center action-bar">
+                            <div class="me-3">
+                                <label for="n-maquina" class="form-label mb-0">Cantidad de dígitos (N)</label>
+                                <select id="n-maquina" class="form-select form-select-sm"
+                                    style="width:auto; display:inline-block;">
+                                    <option>3</option>
+                                    <option selected>4</option>
+                                    <option>5</option>
+                                    <option>6</option>
+                                    <option>7</option>
+                                    <option>8</option>
+                                    <option>9</option>
+                                    <option>10</option>
+                                </select>
+                            </div>
+                            <div class="btn-group me-2 m-2" role="group" aria-label="Acciones secret">
+                                <button id="btn-gen-maquina" class="btn btn-outline-secondary">Generar secreto</button>
+                                <input class="btn-check" type="checkbox" id="chk-ver-maquina" autocomplete="off">
+                                <label class="btn btn-outline-secondary" for="chk-ver-maquina">Mostrar secreto</label>
+                            </div>
+                            <div class="ms-auto p-2">
+                                <button id="btn-limpiar-maquina" class="btn btn-outline-danger">Limpiar
+                                    historial</button>
+                            </div>
+                        </div>
+                        <div class="mt-2 small">
+                            <span class="text-muted">Secreto:</span>
+                            <span id="secret-maquina" class="secret-mask"></span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+
+
+                        <div class="table-responsive mt-3">
+                            <table id="tabla-maquina"
+                                class="table table-sm table-striped table-hover align-middle table-fixed">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width:4ch">#</th>
+                                        <th>Intento</th>
+                                        <th style="width:10ch">Análisis</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <form id="form-maquina" class="row g-2 align-items-center" autocomplete="off" novalidate>
+                            <div class="col-12 col-md">
+                                <label for="input-maquina" class="form-label">Mi intento</label>
+                                <input id="input-maquina" class="form-control form-control-mg" inputmode="numeric"
+                                    maxlength="4" placeholder="Ej: 0123" aria-invalid="false" required />
+                                <div class="invalid-feedback">Debe tener N dígitos sin repetir.</div>
+                            </div>
+                            <div class="col-12 col-md-auto d-grid d-md-flex align-items-end">
+                                <button id="btn-add-maquina" type="submit" class="btn btn-primary btn-lg w-100">Agregar
+                                    intento</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =================== Vs PERSONA =================== -->
+            <section class="tab-pane fade" id="tab-persona" role="tabpanel" aria-labelledby="tab-persona">
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <div class="d-flex flex-column flex-lg-row align-items-lg-center action-bar">
+                            <div class="me-3">
+                                <label for="n-persona" class="form-label mb-0">Cantidad de dígitos (N)</label>
+                                <select id="n-persona" class="form-select form-select-sm"
+                                    style="width:auto; display:inline-block;">
+                                    <option>3</option>
+                                    <option selected>4</option>
+                                    <option>5</option>
+                                    <option>6</option>
+                                    <option>7</option>
+                                    <option>8</option>
+                                    <option>9</option>
+                                    <option>10</option>
+                                </select>
+                            </div>
+                            <div class="input-group input-group-sm me-2 m-2" style="max-width: 320px;">
+                                <span class="input-group-text">Mi secreto (manual)</span>
+                                <input id="input-secreto-manual" class="form-control" inputmode="numeric" maxlength="4"
+                                    style="min-width: 100px;" placeholder="N dígitos sin repetir"
+                                    aria-invalid="false" />
+                                <button id="btn-autogen-persona" class="btn btn-outline-secondary my-2" type="button"
+                                    title="Autogenerar">Autogenerar</button>
+                            </div>
+                            <div class="btn-group me-2 m-2" role="group">
+                                <input class="btn-check" type="checkbox" id="chk-ver-persona" autocomplete="off">
+                                <label class="btn btn-outline-secondary" for="chk-ver-persona">Mostrar secreto</label>
+                            </div>
+                            <div class="ms-auto p-2">
+                                <button id="btn-limpiar-persona" class="btn btn-outline-danger btn-sm">Limpiar
+                                    historial</button>
+                            </div>
+                        </div>
+                        <div class="mt-2 small">
+                            <span class="text-muted">Mi secreto:</span>
+                            <span id="secret-persona" class="secret-mask"></span>
+                        </div>
+                    </div>
+
+                    <div class="card-body play-board ">
+                        <div class="row g-4">
+                            <!-- Oponente → Yo (auto) -->
+                            <div class="col-12 col-md-6 person-vs-owner">
+                                <h6 class="mb-2">Oponente → Yo (auto)</h6>
+
+
+                                <div class="table-responsive mt-3">
+                                    <table id="tabla-oponente-yo"
+                                        class="table table-sm table-striped table-hover align-middle table-fixed">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width:4ch">#</th>
+                                                <th>Intento del oponente</th>
+                                                <th style="width:10ch">Análisis</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                                <form id="form-oponente-yo" class="row g-2 align-items-center" autocomplete="off"
+                                    novalidate>
+                                    <div class="col-12 col-md">
+                                        <label for="input-oponente-yo" class="form-label">Intento del oponente</label>
+                                        <input id="input-oponente-yo" class="form-control form-control-mg"
+                                            inputmode="numeric" maxlength="4" placeholder="Ej: 0123"
+                                            aria-invalid="false" required />
+                                        <div class="invalid-feedback">Debe tener N dígitos sin repetir.</div>
+                                    </div>
+                                    <div class="col-12 col-md-auto d-grid d-md-flex align-items-end">
+                                        <button id="btn-add-oponente-yo" type="submit"
+                                            class="btn btn-primary btn-lg w-100">Agregar intento</button>
+                                    </div>
+                                </form>
+                            </div>
+                            <!-- Yo → Oponente (manual) -->
+                            <div class="col-12 col-md-6 owner-vs-person">
+                                <h6 class="mb-2">Yo → Oponente (manual)</h6>
+
+
+                                <div class="table-responsive mt-3">
+                                    <table id="tabla-yo-oponente"
+                                        class="table table-sm table-striped table-hover align-middle table-fixed">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width:4ch">#</th>
+                                                <th>Mi intento</th>
+                                                <th>Feedback del oponente</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                                <form id="form-yo-oponente" class="row g-2 align-items-center" autocomplete="off"
+                                    novalidate>
+                                    <div class="col-12 col-md">
+                                        <label for="input-yo-oponente" class="form-label">Mi intento al oponente</label>
+                                        <input id="input-yo-oponente" class="form-control form-control-mg"
+                                            inputmode="numeric" maxlength="4" placeholder="Ej: 0123"
+                                            aria-invalid="false" required />
+                                        <div class="invalid-feedback">Debe tener N dígitos sin repetir.</div>
+                                    </div>
+                                    <div class="col-12 col-md-auto d-grid d-md-flex align-items-end">
+                                        <button id="btn-add-yo-oponente" type="submit"
+                                            class="btn btn-primary btn-lg w-100">Agregar intento</button>
+                                    </div>
+                                </form>
+                            </div>
+
+
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Bootstrap JS bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ======= JS (nativo) ======= -->
+    <script type="module">
+        /***********************
+         * Dominio (puro, testeable)
+         ***********************/
+        /** Retorna secreto de longitud N sin dígitos repetidos (crypto + Fisher-Yates). */
+        export function generarSecreto(N) {
+            if (typeof N !== 'number' || N < 1 || N > 10) throw new Error('N inválido');
+            const digits = [...Array(10).keys()]; // [0..9]
+            // Fisher-Yates con aleatoriedad criptográfica
+            for (let i = digits.length - 1; i > 0; i--) {
+                const rand32 = new Uint32Array(1);
+                crypto.getRandomValues(rand32);
+                const j = rand32[0] % (i + 1);
+                [digits[i], digits[j]] = [digits[j], digits[i]];
+            }
+            const take = digits.slice(0, N);
+            // Evitar cero inicial si N>1? No se especificó, se permite.
+            return take.join('');
+        }
+
+        /** Valida que el intento tenga N dígitos y sin repeticiones. */
+        export function validarIntento(cadena, N) {
+            const res = { ok: true, error: undefined };
+            if (typeof cadena !== 'string') { res.ok = false; res.error = 'Tipo inválido'; return res; }
+            if (!/^\d+$/.test(cadena)) { res.ok = false; res.error = 'Solo dígitos'; return res; }
+            if (cadena.length !== N) { res.ok = false; res.error = `Debe tener ${N} dígitos`; return res; }
+            const set = new Set(cadena.split(''));
+            if (set.size !== N) { res.ok = false; res.error = 'No se permiten dígitos repetidos'; return res; }
+            return res;
+        }
+
+        /**
+         * Calcula Fijas/Picas.
+         * Picas = sum(min(countSecret[d], countGuess[d])) - Fijas
+         */
+        export function analizar(secret, guess) {
+            if (secret.length !== guess.length) throw new Error('Longitudes distintas');
+            let fijas = 0;
+            const countS = Array(10).fill(0);
+            const countG = Array(10).fill(0);
+            for (let i = 0; i < secret.length; i++) {
+                const s = secret[i], g = guess[i];
+                if (s === g) fijas++;
+                countS[s.charCodeAt(0) - 48]++;
+                countG[g.charCodeAt(0) - 48]++;
+            }
+            let inter = 0;
+            for (let d = 0; d <= 9; d++) inter += Math.min(countS[d], countG[d]);
+            const picas = inter - fijas;
+            return { fijas, picas };
+        }
+
+        /***********************
+         * Utilidades UI
+         ***********************/
+        const $ = sel => document.querySelector(sel);
+        const $$ = sel => Array.from(document.querySelectorAll(sel));
+        const alerts = $('#alerts');
+
+        function showAlert(message, type = 'warning', timeoutMs = 3000) {
+            const wrapper = document.createElement('div');
+            wrapper.className = `alert alert-${type} alert-dismissible fade show`;
+            wrapper.role = 'alert';
+            wrapper.innerHTML = `
+        <div>${message}</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+      `;
+            alerts.appendChild(wrapper);
+            if (timeoutMs) {
+                setTimeout(() => {
+                    try { bootstrap.Alert.getOrCreateInstance(wrapper).close(); } catch { wrapper.remove(); }
+                }, timeoutMs);
+            }
+        }
+
+        function maskSecret(secret, visible) {
+            return visible ? `<span class="fw-semibold" style="font-family:var(--mono)">${secret}</span>` : '•'.repeat(secret.length);
+        }
+
+        function setInputConstraints(input, N) {
+            input.maxLength = N;
+            input.setAttribute('pattern', `^\\d{${N}}$`);
+            input.placeholder = `Ej: ${[...Array(N).keys()].join('')}`;
+        }
+
+        function clearAndFocus(input) {
+            input.value = '';
+            input.focus();
+        }
+
+        function handleKeyShortcuts(input, onSubmit) {
+            input.addEventListener('keydown', (ev) => {
+                if (ev.key === 'Enter') {
+                    ev.preventDefault();
+                    onSubmit();
+                } else if (ev.key === 'Escape') {
+                    ev.preventDefault();
+                    input.value = '';
+                } else if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'enter') {
+                    ev.preventDefault();
+                    onSubmit();
+                }
+            });
+        }
+
+        function rowAnalysisCell(res) {
+            return (res && typeof res.fijas === 'number' && typeof res.picas === 'number') ? `${res.fijas}F ${res.picas}P` : '';
+        }
+
+        /***********************
+         * Estado + Persistencia
+         ***********************/
+        const Store = {
+            get(key, fallback) {
+                try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
+            },
+            set(key, val) {
+                try { localStorage.setItem(key, JSON.stringify(val)); } catch { }
+            }
+        };
+
+        // ==== Estado Vs Máquina ====
+        const stateM = Store.get('pyf_maquina', {
+            N: 4,
+            secreto: '',
+            visible: false,
+            historial: [] // { guess, res:{fijas,picas} }
+        });
+
+        // ==== Estado Vs Persona ====
+        const stateP = Store.get('pyf_persona', {
+            N: 4,
+            miSecreto: '',
+            visible: false,
+            yoOponente: [], // { guess, feedbackText }
+            oponenteYo: []  // { guess, res:{fijas,picas} }
+        });
+
+        function saveM() { Store.set('pyf_maquina', stateM); }
+        function saveP() { Store.set('pyf_persona', stateP); }
+
+        /***********************
+         * Render Vs Máquina
+         ***********************/
+        const nM = $('#n-maquina');
+        const secretM = $('#secret-maquina');
+        const chkVerM = $('#chk-ver-maquina');
+        const inputM = $('#input-maquina');
+        const formM = $('#form-maquina');
+        const btnAddM = $('#btn-add-maquina');
+        const btnGenM = $('#btn-gen-maquina');
+        const btnClearM = $('#btn-limpiar-maquina');
+        const tbodyM = $('#tabla-maquina tbody');
+
+        function actualizarIntentoM(idx, nuevo) {
+            const v = validarIntento(nuevo, stateM.N);
+            if (!v.ok) { showAlert(v.error || 'Intento inválido', 'warning', 2000); renderMaquina(); return; }
+            const res = analizar(stateM.secreto, nuevo);
+            stateM.historial[idx] = { guess: nuevo, res };
+            saveM(); renderMaquina();
+        }
+
+        function renderMaquina() {
+            // Controles superiores
+            nM.value = String(stateM.N);
+            chkVerM.checked = !!stateM.visible;
+            secretM.innerHTML = maskSecret(stateM.secreto || '----', stateM.visible);
+
+            // Input constraints
+            setInputConstraints(inputM, stateM.N);
+            inputM.setAttribute('inputmode', 'numeric');
+
+            // Tabla
+            tbodyM.innerHTML = '';
+            tbodyM.addEventListener('keydown', (e) => {
+                const t = e.target;
+                if (t && t.classList.contains('attempt-edit-maquina') && e.key === 'Enter') {
+                    e.preventDefault();
+                    actualizarIntentoM(Number(t.dataset.index), t.value.trim());
+                }
+            });
+            tbodyM.addEventListener('blur', (e) => {
+                const t = e.target;
+                if (t && t.classList.contains('attempt-edit-maquina')) {
+                    actualizarIntentoM(Number(t.dataset.index), t.value.trim());
+                }
+            }, true);
+            stateM.historial.forEach((h, idx) => {
+                const tr = document.createElement('tr');
+                if (h.res && h.res.fijas === stateM.N) tr.classList.add('table-success');
+                tr.innerHTML = `
+  <td>${idx + 1}</td>
+  <td>
+    <input class="form-control form-control-sm attempt-edit-maquina"
+           value="${h.guess}" data-index="${idx}"
+           inputmode="numeric" maxlength="${stateM.N}"
+           pattern="^\\d{${stateM.N}}$" />
+  </td>
+  <td>${rowAnalysisCell(h.res)}</td>`;
+                tbodyM.appendChild(tr);
+            });
+        }
+
+        function generarYMostrarSecretoM() {
+            try {
+                stateM.secreto = generarSecreto(stateM.N);
+                saveM(); renderMaquina();
+            } catch (e) { showAlert(e.message, 'danger'); }
+        }
+
+        function addIntentoM() {
+            const guess = inputM.value.trim();
+            const v = validarIntento(guess, stateM.N);
+            if (!v.ok) {
+                inputM.classList.add('is-invalid'); inputM.setAttribute('aria-invalid', 'true');
+                showAlert(v.error || 'Intento inválido', 'warning', 2000);
+                return;
+            }
+            inputM.classList.remove('is-invalid'); inputM.setAttribute('aria-invalid', 'false');
+            if (!stateM.secreto) generarYMostrarSecretoM();
+            const res = analizar(stateM.secreto, guess);
+            stateM.historial.push({ guess, res });
+            saveM(); renderMaquina();
+            clearAndFocus(inputM);
+        }
+
+        // Eventos Vs Máquina
+        nM.addEventListener('change', () => {
+            stateM.N = Number(nM.value);
+            // Ajustar secreto si N cambió
+            stateM.secreto = '';
+            stateM.historial = [];
+            saveM(); renderMaquina();
+        });
+        chkVerM.addEventListener('change', () => { stateM.visible = chkVerM.checked; saveM(); renderMaquina(); });
+        btnGenM.addEventListener('click', generarYMostrarSecretoM);
+        btnClearM.addEventListener('click', () => { stateM.historial = []; saveM(); renderMaquina(); });
+        formM.addEventListener('submit', (e) => { e.preventDefault(); addIntentoM(); });
+        handleKeyShortcuts(inputM, addIntentoM);
+
+        /***********************
+         * Render Vs Persona
+         ***********************/
+        const nP = $('#n-persona');
+        const inputSecretoManual = $('#input-secreto-manual');
+        const secretP = $('#secret-persona');
+        const chkVerP = $('#chk-ver-persona');
+        const btnAutogenP = $('#btn-autogen-persona');
+        const btnClearP = $('#btn-limpiar-persona');
+
+        // Yo → Oponente
+        const formYO = $('#form-yo-oponente');
+        const inputYO = $('#input-yo-oponente');
+        const tbodyYO = $('#tabla-yo-oponente tbody');
+
+        // Oponente → Yo
+        const formOY = $('#form-oponente-yo');
+        const inputOY = $('#input-oponente-yo');
+        const tbodyOY = $('#tabla-oponente-yo tbody');
+
+        function actualizarYO(idx, nuevo) {
+            const v = validarIntento(nuevo, stateP.N);
+            if (!v.ok) { showAlert(v.error || 'Intento inválido', 'warning', 2000); renderPersona(); return; }
+            stateP.yoOponente[idx].guess = nuevo;
+            saveP(); renderPersona();
+        }
+
+        function actualizarOY(idx, nuevo) {
+            const v = validarIntento(nuevo, stateP.N);
+            if (!v.ok) { showAlert(v.error || 'Intento inválido', 'warning', 2000); renderPersona(); return; }
+            if (!stateP.miSecreto) { showAlert('Primero define tu secreto (manual o autogenerado).', 'info', 2500); return; }
+            const res = analizar(stateP.miSecreto, nuevo);
+            stateP.oponenteYo[idx] = { guess: nuevo, res };
+            saveP(); renderPersona();
+        }
+
+
+        function renderPersona() {
+            nP.value = String(stateP.N);
+            chkVerP.checked = !!stateP.visible;
+            secretP.innerHTML = maskSecret(stateP.miSecreto || '----', stateP.visible);
+
+            // Secreto manual constraints
+            setInputConstraints(inputSecretoManual, stateP.N);
+
+            // Inputs de intentos
+            setInputConstraints(inputYO, stateP.N);
+            setInputConstraints(inputOY, stateP.N);
+
+            // Tablas
+            tbodyYO.innerHTML = '';
+            tbodyYO.addEventListener('keydown', (e) => {
+                const t = e.target;
+                if (t && t.classList.contains('attempt-edit-yo-oponente') && e.key === 'Enter') {
+                    e.preventDefault();
+                    actualizarYO(Number(t.dataset.index), t.value.trim());
+                }
+            });
+            tbodyYO.addEventListener('blur', (e) => {
+                const t = e.target;
+                if (t && t.classList.contains('attempt-edit-yo-oponente')) {
+                    actualizarYO(Number(t.dataset.index), t.value.trim());
+                }
+            }, true);
+
+
+
+            stateP.yoOponente.forEach((h, idx) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+    <td>${idx + 1}</td>
+    <td>
+      <input class="form-control form-control-sm attempt-edit-yo-oponente"
+             value="${h.guess}" data-index="${idx}"
+             inputmode="numeric" maxlength="${stateP.N}"
+             pattern="^\\d{${stateP.N}}$" />
+    </td>
+    <td>
+      <input class="form-control form-control-sm" value="${h.feedbackText ?? ''}" placeholder="Ej: 2F 1P"
+             data-index="${idx}" />
+    </td>`;
+                tbodyYO.appendChild(tr);
+            });
+
+            tbodyOY.addEventListener('keydown', (e) => {
+                const t = e.target;
+                if (t && t.classList.contains('attempt-edit-oponente-yo') && e.key === 'Enter') {
+                    e.preventDefault();
+                    actualizarOY(Number(t.dataset.index), t.value.trim());
+                }
+            });
+            tbodyOY.addEventListener('blur', (e) => {
+                const t = e.target;
+                if (t && t.classList.contains('attempt-edit-oponente-yo')) {
+                    actualizarOY(Number(t.dataset.index), t.value.trim());
+                }
+            }, true);
+
+            tbodyOY.innerHTML = '';
+            stateP.oponenteYo.forEach((h, idx) => {
+                const ok = h.res && h.res.fijas === stateP.N;
+                const tr = document.createElement('tr');
+                if (ok) tr.classList.add('table-success');
+                tr.innerHTML = `
+    <td>${idx + 1}</td>
+    <td>
+      <input class="form-control form-control-sm attempt-edit-oponente-yo"
+             value="${h.guess}" data-index="${idx}"
+             inputmode="numeric" maxlength="${stateP.N}"
+             pattern="^\\d{${stateP.N}}$" />
+    </td>
+    <td>${rowAnalysisCell(h.res)}</td>`;
+                tbodyOY.appendChild(tr);
+            });
+        }
+
+        function setSecretoManual(val) {
+            const v = validarIntento(val, stateP.N);
+            if (!v.ok) {
+                inputSecretoManual.classList.add('is-invalid'); inputSecretoManual.setAttribute('aria-invalid', 'true');
+                showAlert(v.error || 'Secreto inválido', 'warning', 2000);
+                return false;
+            }
+            inputSecretoManual.classList.remove('is-invalid'); inputSecretoManual.setAttribute('aria-invalid', 'false');
+            stateP.miSecreto = val;
+            saveP(); renderPersona();
+            return true;
+        }
+
+        function autogenSecretoP() {
+            try {
+                stateP.miSecreto = generarSecreto(stateP.N);
+                inputSecretoManual.value = stateP.miSecreto;
+                inputSecretoManual.classList.remove('is-invalid'); inputSecretoManual.setAttribute('aria-invalid', 'false');
+                saveP(); renderPersona();
+            } catch (e) { showAlert(e.message, 'danger'); }
+        }
+
+        function addYO() {
+            const guess = inputYO.value.trim();
+            const v = validarIntento(guess, stateP.N);
+            if (!v.ok) {
+                inputYO.classList.add('is-invalid'); inputYO.setAttribute('aria-invalid', 'true');
+                showAlert(v.error || 'Intento inválido', 'warning', 2000);
+                return;
+            }
+            inputYO.classList.remove('is-invalid'); inputYO.setAttribute('aria-invalid', 'false');
+            stateP.yoOponente.push({ guess, feedbackText: '' });
+            saveP(); renderPersona();
+            clearAndFocus(inputYO);
+        }
+
+        function addOY() {
+            const guess = inputOY.value.trim();
+            const v = validarIntento(guess, stateP.N);
+            if (!v.ok) {
+                inputOY.classList.add('is-invalid'); inputOY.setAttribute('aria-invalid', 'true');
+                showAlert(v.error || 'Intento inválido', 'warning', 2000);
+                return;
+            }
+            inputOY.classList.remove('is-invalid'); inputOY.setAttribute('aria-invalid', 'false');
+            if (!stateP.miSecreto) {
+                showAlert('Primero define tu secreto (manual o autogenerado).', 'info', 2500);
+                inputSecretoManual.focus();
+                return;
+            }
+            const res = analizar(stateP.miSecreto, guess);
+            stateP.oponenteYo.push({ guess, res });
+            saveP(); renderPersona();
+            clearAndFocus(inputOY);
+        }
+
+        // Eventos Vs Persona
+        nP.addEventListener('change', () => {
+            stateP.N = Number(nP.value);
+            // Ajustar campos y limpiar historiales que dependen de N
+            stateP.yoOponente = [];
+            stateP.oponenteYo = [];
+            // Invalidar secreto hasta que sea reingresado o autogenerado
+            stateP.miSecreto = '';
+            inputSecretoManual.value = '';
+            saveP(); renderPersona();
+        });
+
+        chkVerP.addEventListener('change', () => { stateP.visible = chkVerP.checked; saveP(); renderPersona(); });
+        btnAutogenP.addEventListener('click', autogenSecretoP);
+        btnClearP.addEventListener('click', () => { stateP.yoOponente = []; stateP.oponenteYo = []; saveP(); renderPersona(); });
+
+        inputSecretoManual.addEventListener('change', () => setSecretoManual(inputSecretoManual.value.trim()));
+        inputSecretoManual.addEventListener('blur', () => {
+            const val = inputSecretoManual.value.trim();
+            if (val) setSecretoManual(val);
+        });
+
+        formYO.addEventListener('submit', (e) => { e.preventDefault(); addYO(); });
+        handleKeyShortcuts(inputYO, addYO);
+
+        formOY.addEventListener('submit', (e) => { e.preventDefault(); addOY(); });
+        handleKeyShortcuts(inputOY, addOY);
+
+        // Inline feedback editable: guardar al escribir
+        tbodyYO.addEventListener('input', (e) => {
+            const t = e.target;
+            if (t && t.matches('input[data-index]')) {
+                const idx = Number(t.getAttribute('data-index'));
+                if (!Number.isNaN(idx) && stateP.yoOponente[idx]) {
+                    stateP.yoOponente[idx].feedbackText = t.value;
+                    saveP();
+                }
+            }
+        });
+
+        /***********************
+         * Inicialización
+         ***********************/
+        // Tabs bootstrap: activación visual (ya están con data-bs-toggle)
+        // Asegurar que N de inputs coincida con estado
+        setInputConstraints(inputM, stateM.N);
+        setInputConstraints(inputYO, stateP.N);
+        setInputConstraints(inputOY, stateP.N);
+        setInputConstraints(inputSecretoManual, stateP.N);
+
+        // Si no hay secreto en Vs Máquina al abrir, generar automáticamente (requisito)
+        if (!stateM.secreto) {
+            try { stateM.secreto = generarSecreto(stateM.N); saveM(); } catch { }
+        }
+
+        renderMaquina();
+        renderPersona();
+
+        // Accesibilidad: mensajes iniciales
+        showAlert('Consejo: usa Enter para agregar y Esc para limpiar. Ctrl/⌘+Enter también agrega.', 'secondary', 4000);
+
+        /***********************
+         * Casos de prueba (consola)
+         ***********************/
+        console.assert(JSON.stringify(analizar('0945', '9540')) === JSON.stringify({ fijas: 1, picas: 3 }), 'Test analizar 0945 vs 9540');
+        console.assert(JSON.stringify(analizar('1234', '1234')) === JSON.stringify({ fijas: 4, picas: 0 }), 'Test analizar 1234 vs 1234');
+
+        // Validaciones longitud y repetición
+        (function () {
+            const v1 = validarIntento('1234', 4); console.assert(v1.ok, 'valid 1234 N=4');
+            const v2 = validarIntento('1123', 4); console.assert(!v2.ok, 'repetidos no permitidos');
+            const v3 = validarIntento('123', 4); console.assert(!v3.ok, 'longitud incorrecta');
+            const v4 = validarIntento('12a4', 4); console.assert(!v4.ok, 'solo dígitos');
+        })();
+    </script>
+</body>
+
+</html>
